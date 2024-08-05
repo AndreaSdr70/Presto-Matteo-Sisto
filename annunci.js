@@ -79,20 +79,33 @@ fetch('./annunci.json').then((response)=>response.json()).then((data)=> {
 
     showCards(data);
 // In qusta funzione ho bisogno di ottenere un nuovo array, partendo da data e gli elementi del nuovo array dovranno soddisfare la condizioneper la quale la loro category sia uguale alla categoriache stiamo passando alla funzione
-    function filterByCategory(categoria){
+let radioButtons = document.querySelectorAll('.form-check-input');
+    function filterByCategory(array){
+
+        // La categoria voglio 
+        let categoria = Array.from(radioButtons).find((button)=>button.checked).id;
+        // let arrayFromNodeList = Array.from(radioButtons);
+        // let button = arrayFromNodeList.find((bottone)=> bottone.checked);
+        // let categoria = button.id;
+       // console.log(categoria);
+        
         if(categoria != 'All'){       
-        let filtered = data.filter((annuncio)=> annuncio.category == categoria);
-        showCards(filtered);
+        let filtered = array.filter((annuncio)=> annuncio.category == categoria);
+        // console.log(filtered)
+        return filtered; //showCards(filtered);
          }else{
-            showCards(data);
+            return array;//    showCards(data);
          }
     }
     
 
-    let radioButtons = document.querySelectorAll('.form-check-input');
+    
     radioButtons.forEach((button)=> {
         button.addEventListener('click', ()=>{
-            filterByCategory(button.id);
+            setPriceInput();
+            globalFilter();
+            //filterByCategory();
+           // filterByCategory(button.id);
         })
     });
 
@@ -102,7 +115,7 @@ fetch('./annunci.json').then((response)=>response.json()).then((data)=> {
 function setPriceInput(){
 
     //Dopo aver catturato l'input voglio settare come proprietà max dello stesso il valore più alto tra i price di ogni prodotto di ogni annuncio. Per farlo avrò quindi bisogno di un array che contenga solo i prezzi, a quel punto lo ordino in maniera crescente/decrescente e prendermi l'elemento con il valore più alto. 
-    let prices = data.map((annuncio)=> +annuncio.price);
+    let prices = filterByCategory(data).map((annuncio)=> +annuncio.price);
     prices.sort((a, b)=> a -b );
     let maxPrice = Math.ceil(prices.pop());
     priceInput.max = maxPrice;
@@ -113,25 +126,36 @@ function setPriceInput(){
 
 setPriceInput();
 
-function filterByPrice(){
-    let filtered = data.filter((annuncio)=> +annuncio.price <= priceInput.value);
-    showCards(filtered);
+function filterByPrice(array){
+    let filtered = array.filter((annuncio)=> +annuncio.price <= priceInput.value);
+   return filtered;
 }
 
 priceInput.addEventListener('input', ()=>{
     priceValue.innerHTML = priceInput.value;
-    filterByPrice();
+    globalFilter();
 });
 
 let wordInput = document.querySelector('#wordInput');
-function filterByWord(parola){
-    let filtered = data.filter((annuncio)=> annuncio.name.toLowerCase().includes(parola.toLowerCase()));
-    showCards(filtered);
+function filterByWord(array){
+    let filtered = array.filter((annuncio)=> annuncio.name.toLowerCase().includes(wordInput.value.toLowerCase()));
+   return filtered;
 }
 
 wordInput.addEventListener('input', ()=>{
-    filterByWord(wordInput.value);
+    globalFilter();
 });
+
+//Quello di cui abbiamo bisogno è che ad ogni evento scattino tutte e tre le funzioni di filtro ma non sianoapplicate tutte e tre sull'array data, bensi siano concatenate ed ognuna filtri il risultato della funzione di filtro precedente.
+
+function globalFilter(){
+    let filteredByCategory = filterByCategory(data); //Undefined no - ma ora un array filtrato per categoria
+    let filteredByPrice = filterByPrice(filteredByCategory); // mi ritorna array filtrato sia per categoria che per prezzo
+    let filteredByWord = filterByWord(filteredByPrice); // mi ritorna un array filtrato per categoria prezzo e pure parola
+
+    showCards(filteredByWord);
+}
+
 
 
 });
